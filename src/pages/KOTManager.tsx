@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -368,7 +367,7 @@ const KOTManager = () => {
                       <Badge variant={
                         kot.status === "pending" ? "outline" : 
                         kot.status === "preparing" ? "secondary" : 
-                        "success"
+                        "default"
                       }>
                         {kot.status === "pending" && "Pending"}
                         {kot.status === "preparing" && "Preparing"}
