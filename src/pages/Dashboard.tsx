@@ -103,6 +103,9 @@ const Dashboard = () => {
     setSelectedItems([]);
   };
 
+  // Check if user is cashier or admin
+  const showAlerts = currentUser?.role === "admin" || currentUser?.role === "cashier";
+
   return (
     <div className="space-y-6">
       <div>
@@ -112,20 +115,22 @@ const Dashboard = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="card-hover">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Unread Alerts</CardTitle>
-              <CardDescription className="text-2xl font-bold">{unreadAlertsCount}</CardDescription>
-            </div>
-            <Bell className="h-5 w-5 text-posguard-primary" />
-          </CardHeader>
-          <CardContent>
-            <Button variant="link" size="sm" className="p-0 h-auto text-posguard-primary" onClick={() => navigate("/alerts")}>
-              View alerts <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
+        {showAlerts && (
+          <Card className="card-hover">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Unread Alerts</CardTitle>
+                <CardDescription className="text-2xl font-bold">{unreadAlertsCount}</CardDescription>
+              </div>
+              <Bell className="h-5 w-5 text-posguard-primary" />
+            </CardHeader>
+            <CardContent>
+              <Button variant="link" size="sm" className="p-0 h-auto text-posguard-primary" onClick={() => navigate("/alerts")}>
+                View alerts <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -142,20 +147,22 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-hover">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Activities Today</CardTitle>
-              <CardDescription className="text-2xl font-bold">{todayActivitiesCount}</CardDescription>
-            </div>
-            <Activity className="h-5 w-5 text-posguard-primary" />
-          </CardHeader>
-          <CardContent>
-            <Button variant="link" size="sm" className="p-0 h-auto text-posguard-primary" onClick={() => navigate("/activity-log")}>
-              View activity <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
+        {currentUser?.role === "admin" && (
+          <Card className="card-hover">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Activities Today</CardTitle>
+                <CardDescription className="text-2xl font-bold">{todayActivitiesCount}</CardDescription>
+              </div>
+              <Activity className="h-5 w-5 text-posguard-primary" />
+            </CardHeader>
+            <CardContent>
+              <Button variant="link" size="sm" className="p-0 h-auto text-posguard-primary" onClick={() => navigate("/activity-log")}>
+                View activity <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Quick KOT Creator */}
@@ -241,76 +248,80 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Alerts */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Recent Alerts</CardTitle>
-              <Button 
-                variant="link" 
-                size="sm" 
-                onClick={() => navigate("/alerts")}
-                className="text-posguard-primary"
-              >
-                View all
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockAlerts.slice(0, 3).map((alert) => (
-                <div key={alert.id} className={`p-3 rounded-md bg-white shadow-sm ${alert.severity === "high" ? "alert-high" : alert.severity === "medium" ? "alert-medium" : "alert-low"}`}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium text-sm">{alert.title}</h4>
-                      <div className="flex items-center mt-1">
-                        <Clock className="h-3 w-3 text-muted-foreground mr-1" />
-                        <span className="text-xs text-muted-foreground">{formatRelativeTime(alert.timestamp)}</span>
+        {showAlerts && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Recent Alerts</CardTitle>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={() => navigate("/alerts")}
+                  className="text-posguard-primary"
+                >
+                  View all
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockAlerts.slice(0, 3).map((alert) => (
+                  <div key={alert.id} className={`p-3 rounded-md bg-white shadow-sm ${alert.severity === "high" ? "alert-high" : alert.severity === "medium" ? "alert-medium" : "alert-low"}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium text-sm">{alert.title}</h4>
+                        <div className="flex items-center mt-1">
+                          <Clock className="h-3 w-3 text-muted-foreground mr-1" />
+                          <span className="text-xs text-muted-foreground">{formatRelativeTime(alert.timestamp)}</span>
+                        </div>
                       </div>
+                      <Badge variant={alert.severity === "high" ? "destructive" : alert.severity === "medium" ? "default" : "outline"}>
+                        {alert.severity}
+                      </Badge>
                     </div>
-                    <Badge variant={alert.severity === "high" ? "destructive" : alert.severity === "medium" ? "default" : "outline"}>
-                      {alert.severity}
-                    </Badge>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Activity Log */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
-              <Button 
-                variant="link" 
-                size="sm" 
-                onClick={() => navigate("/activity-log")}
-                className="text-posguard-primary"
-              >
-                View all
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockActivities.slice(0, 3).map((activity) => (
-                <div key={activity.id} className="space-y-1">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-medium text-sm">{activity.action}</h4>
-                    <span className="text-xs text-muted-foreground">{formatRelativeTime(activity.timestamp)}</span>
+        {currentUser?.role === "admin" && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Recent Activity</CardTitle>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={() => navigate("/activity-log")}
+                  className="text-posguard-primary"
+                >
+                  View all
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockActivities.slice(0, 3).map((activity) => (
+                  <div key={activity.id} className="space-y-1">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium text-sm">{activity.action}</h4>
+                      <span className="text-xs text-muted-foreground">{formatRelativeTime(activity.timestamp)}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      by {activity.user}
+                      {activity.table && ` • ${activity.table}`}
+                      {activity.amount && ` • ${activity.amount}`}
+                    </p>
+                    {activity.id !== mockActivities.slice(0, 3).length && <Separator className="my-3" />}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    by {activity.user}
-                    {activity.table && ` • ${activity.table}`}
-                    {activity.amount && ` • ${activity.amount}`}
-                  </p>
-                  {activity.id !== mockActivities.slice(0, 3).length && <Separator className="my-3" />}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

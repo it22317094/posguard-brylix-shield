@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, ArrowRight, Clock, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define interfaces
 interface KOTItem {
@@ -96,6 +98,7 @@ const KOTManager = () => {
   const [currentItem, setCurrentItem] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
+  const { currentUser } = useAuth();
 
   // Filter KOTs based on active tab
   const filteredKOTs = activeTab === "all" 
@@ -230,6 +233,9 @@ const KOTManager = () => {
   const pendingCount = kots.filter(k => k.status === "pending").length;
   const preparingCount = kots.filter(k => k.status === "preparing").length;
   const completedCount = kots.filter(k => k.status === "completed").length;
+  
+  // Check if user is kitchen staff
+  const isKitchenStaff = currentUser?.role === "kitchen";
 
   return (
     <div className="space-y-6">
@@ -432,7 +438,7 @@ const KOTManager = () => {
                           </>
                         )}
                         
-                        {kot.status === "completed" && (
+                        {kot.status === "completed" && !isKitchenStaff && (
                           <Button 
                             variant="outline" 
                             onClick={() => handleStatusChange(kot.id, "preparing")}
