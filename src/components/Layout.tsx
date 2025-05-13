@@ -32,13 +32,47 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     navigate("/login");
   };
 
-  const navItems = [
-    { label: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard" },
-    { label: "KOT Manager", icon: <ListTodo size={20} />, href: "/kot-manager" },
-    { label: "Alerts", icon: <Bell size={20} />, href: "/alerts" },
-    { label: "Activity Log", icon: <Activity size={20} />, href: "/activity-log" },
-    { label: "Settings", icon: <Settings size={20} />, href: "/settings" },
-  ];
+  // Define which navigation items are available based on role
+  const getNavigationItems = () => {
+    const allItems = [
+      { 
+        label: "Dashboard", 
+        icon: <LayoutDashboard size={20} />, 
+        href: "/dashboard",
+        allowedRoles: ["admin", "cashier", "kitchen"]
+      },
+      { 
+        label: "KOT Manager", 
+        icon: <ListTodo size={20} />, 
+        href: "/kot-manager",
+        allowedRoles: ["admin", "cashier", "kitchen"]
+      },
+      { 
+        label: "Alerts", 
+        icon: <Bell size={20} />, 
+        href: "/alerts",
+        allowedRoles: ["admin"]  // Only admin can see Alerts
+      },
+      { 
+        label: "Activity Log", 
+        icon: <Activity size={20} />, 
+        href: "/activity-log",
+        allowedRoles: ["admin"]  // Only admin can see Activity Log
+      },
+      { 
+        label: "Settings", 
+        icon: <Settings size={20} />, 
+        href: "/settings",
+        allowedRoles: ["admin"]  // Only admin can see Settings
+      },
+    ];
+
+    return currentUser 
+      ? allItems.filter(item => item.allowedRoles.includes(currentUser.role)) 
+      : [];
+  };
+
+  const navItems = getNavigationItems();
 
   return (
     <div className="flex h-screen w-full">
