@@ -45,22 +45,22 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/alerts" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin", "cashier"]}>
                 <Alerts />
               </ProtectedRoute>
             } />
             <Route path="/activity-log" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin", "cashier"]}>
                 <ActivityLog />
               </ProtectedRoute>
             } />
             <Route path="/settings" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <Settings />
               </ProtectedRoute>
             } />
             
-            {/* Redirect root to dashboard */}
+            {/* Redirect root to dashboard or login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             
             {/* Catch-all route for 404 */}

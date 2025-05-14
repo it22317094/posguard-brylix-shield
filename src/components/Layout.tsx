@@ -12,10 +12,12 @@ import {
   LogOut, 
   Shield, 
   Menu, 
-  X 
+  X,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,6 +32,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
   };
 
   // Define which navigation items are available based on role
@@ -51,13 +62,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         label: "Alerts", 
         icon: <Bell size={20} />, 
         href: "/alerts",
-        allowedRoles: ["admin"]  // Only admin can see Alerts
+        allowedRoles: ["admin", "cashier"]  // Only admin and cashier can see Alerts
       },
       { 
         label: "Activity Log", 
         icon: <Activity size={20} />, 
         href: "/activity-log",
-        allowedRoles: ["admin"]  // Only admin can see Activity Log
+        allowedRoles: ["admin", "cashier"]  // Only admin and cashier can see Activity Log
       },
       { 
         label: "Settings", 
@@ -134,7 +145,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* User profile */}
           <div className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <Avatar>
+                <AvatarFallback className="bg-posguard-primary text-white">
+                  {currentUser ? getInitials(currentUser.name) : <User size={16} />}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <p className="font-medium text-sm">{currentUser?.name}</p>
                 <p className="text-xs text-muted-foreground capitalize">{currentUser?.role}</p>
@@ -143,7 +159,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 variant="ghost" 
                 size="icon"
                 onClick={handleLogout}
-                className="text-gray-500 hover:text-red-500"
+                className="ml-auto text-gray-500 hover:text-red-500"
               >
                 <LogOut size={18} />
               </Button>

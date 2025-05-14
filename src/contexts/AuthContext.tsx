@@ -16,7 +16,7 @@ export interface User {
 interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
-  sendOTP: (email: string) => Promise<boolean>;
+  sendOTP: (email: string, password?: string) => Promise<boolean>;
   verifyOTP: (email: string, otp: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -33,6 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Mock users - in a real app, this would come from Firebase
   const mockUsers: User[] = [
+    { email: 'it22317094@my.sliit.lk', name: 'Hanthanapitiya', role: 'admin' },
+    { email: 'dinupahanthanapitiya@gmail.com', name: 'Dinupa', role: 'cashier' },
+    { email: 'darkatomhacker@gmail.com', name: 'Atom', role: 'kitchen' },
     { email: 'admin@posguard.com', name: 'Admin User', role: 'admin' },
     { email: 'cashier@posguard.com', name: 'John Cashier', role: 'cashier' },
     { email: 'kitchen@posguard.com', name: 'Kitchen Staff', role: 'kitchen' }
@@ -52,16 +55,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  // Mock function to send OTP - in a real app, this would call Firebase function
-  const sendOTP = async (email: string): Promise<boolean> => {
+  // Mock function to simulate password checking - in a real app, this would use Firebase Auth
+  const verifyCredentials = (email: string, password?: string): boolean => {
     // Check if email exists in our mock users
     const user = mockUsers.find(user => user.email === email);
+    
     if (!user) {
       toast({
         title: "User not found",
         description: "Please check your email address and try again.",
         variant: "destructive"
       });
+      return false;
+    }
+    
+    // For demo purposes, we'll accept any password or no password
+    // In a real app, we would check the password against Firebase Auth
+    if (password && password.length < 6) {
+      toast({
+        title: "Invalid password",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Mock function to send OTP - in a real app, this would call Firebase function
+  const sendOTP = async (email: string, password?: string): Promise<boolean> => {
+    // First verify credentials
+    if (!verifyCredentials(email, password)) {
       return false;
     }
 

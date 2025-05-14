@@ -3,14 +3,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, KeyRound } from "lucide-react";
+import { Shield } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Verify = () => {
   const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [canResend, setCanResend] = useState(true);
   const { verifyOTP, sendOTP } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,8 +59,14 @@ const Verify = () => {
   };
 
   const handleResendOTP = async () => {
+    setCanResend(false);
     await sendOTP(email);
     setTimeLeft(300);
+    
+    // Prevent resending for 30 seconds
+    setTimeout(() => {
+      setCanResend(true);
+    }, 30000);
   };
 
   return (
@@ -75,42 +82,32 @@ const Verify = () => {
 
         <Card className="animate-fade-in animation-delay-100 shadow-lg">
           <CardHeader>
-            <CardTitle>Verify Your Email</CardTitle>
+            <CardTitle className="text-2xl">Enter OTP</CardTitle>
             <CardDescription>
-              Enter the 6-digit code sent to {email}
+              Please enter the 6-digit code sent to {email}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="flex items-center border rounded-md overflow-hidden bg-white">
-                  <div className="pl-3 pr-1">
-                    <KeyRound className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="6-digit code"
-                    value={otp}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 6) {
-                        setOtp(value);
-                      }
-                    }}
-                    maxLength={6}
-                    pattern="\d{6}"
-                    required
-                    className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-                
-                <div className="text-center text-sm">
-                  <p>
-                    Code expires in: <span className={`font-medium ${timeLeft < 60 ? 'text-red-500' : ''}`}>
-                      {formatTime(timeLeft)}
-                    </span>
-                  </p>
-                </div>
+              <div className="flex justify-center py-4">
+                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              
+              <div className="text-center text-sm mt-4">
+                <p>
+                  Code expires in: <span className={`font-medium ${timeLeft < 60 ? 'text-red-500' : ''}`}>
+                    {formatTime(timeLeft)}
+                  </span>
+                </p>
               </div>
             </form>
           </CardContent>
@@ -126,10 +123,10 @@ const Verify = () => {
             <Button 
               variant="outline" 
               onClick={handleResendOTP} 
-              disabled={timeLeft > 240} 
+              disabled={!canResend} 
               className="w-full"
             >
-              Resend Code {timeLeft > 240 && `(${Math.floor((timeLeft - 240) / 60)}:${((timeLeft - 240) % 60).toString().padStart(2, '0')})`}
+              {!canResend ? "Wait to resend OTP" : "Resend Code"}
             </Button>
             
             <Button 
