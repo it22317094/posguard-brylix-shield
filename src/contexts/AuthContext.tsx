@@ -1,9 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { 
-  User, 
-  AuthContextType, 
-  UserRole
+  User as AuthUser, 
+  AuthContextType as AuthContextInterface, 
+  UserRole as AuthUserRole
 } from '@/types/auth';
 import {
   productionUsers,
@@ -17,32 +17,12 @@ import {
   getStoredOTP
 } from '@/utils/auth-utils';
 
-// Define user roles
-export type UserRole = 'admin' | 'cashier' | 'kitchen';
-
-// Define the user type
-export interface User {
-  email: string;
-  name: string;
-  role: UserRole;
-}
-
-// Define the auth context type
-interface AuthContextType {
-  currentUser: User | null;
-  isLoading: boolean;
-  sendOTP: (email: string, password?: string) => Promise<boolean>;
-  verifyOTP: (email: string, otp: string) => Promise<boolean>;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
 // Create the auth context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextInterface | undefined>(undefined);
 
 // Create a provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
@@ -122,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     let loginSuccessful = false;
-    let userToLogin: User | undefined;
+    let userToLogin: AuthUser | undefined;
     
     // Try normal OTP verification
     if (otpData) {
@@ -263,5 +243,5 @@ export const useAuth = () => {
   return context;
 };
 
-// Re-export types for convenience
-export { UserRole, type User };
+// Re-export types using the proper syntax for isolatedModules
+export type { AuthUserRole as UserRole, AuthUser as User };
