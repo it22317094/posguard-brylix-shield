@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Bell, ListTodo, Activity } from "lucide-react";
 
 // Custom hooks

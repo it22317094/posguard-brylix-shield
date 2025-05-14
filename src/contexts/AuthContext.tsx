@@ -1,5 +1,21 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { 
+  User, 
+  AuthContextType, 
+  UserRole
+} from '@/types/auth';
+import {
+  productionUsers,
+  fallbackUsers,
+  allUsers,
+  fallbackMapping,
+  enableFallbackMode,
+  verifyCredentials,
+  logUserActivity,
+  generateAndSaveOTP,
+  getStoredOTP
+} from '@/utils/auth-utils';
 
 // Define user roles
 export type UserRole = 'admin' | 'cashier' | 'kitchen';
@@ -30,33 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  // Production users - these are the actual target users
-  const productionUsers: User[] = [
-    { email: 'it22317094@my.sliit.lk', name: 'Hanthanapitiya', role: 'admin' },
-    { email: 'dinupahanthanapitiya@gmail.com', name: 'Dinupa', role: 'cashier' },
-    { email: 'darkatomhacker@gmail.com', name: 'Atom', role: 'kitchen' },
-  ];
-
-  // Fallback users - these are the demo accounts mapped to production users
-  const fallbackUsers: User[] = [
-    { email: 'admin@posguard.com', name: 'Admin User', role: 'admin' },
-    { email: 'cashier@posguard.com', name: 'John Cashier', role: 'cashier' },
-    { email: 'kitchen@posguard.com', name: 'Kitchen Staff', role: 'kitchen' }
-  ];
-  
-  // Combined users list for internal use
-  const allUsers = [...productionUsers, ...fallbackUsers];
-
-  // Fallback mapping from production to demo accounts
-  const fallbackMapping: Record<string, string> = {
-    'it22317094@my.sliit.lk': 'admin@posguard.com',
-    'dinupahanthanapitiya@gmail.com': 'cashier@posguard.com',
-    'darkatomhacker@gmail.com': 'kitchen@posguard.com'
-  };
-  
-  // Feature flag for fallback mode - in production, this could come from a config service
-  const enableFallbackMode = true;
-
   // Check if user is saved in localStorage on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('posguard_user');
@@ -70,34 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setIsLoading(false);
   }, []);
-
-  // Mock function to simulate password checking - in a real app, this would use Firebase Auth
-  const verifyCredentials = (email: string, password?: string): boolean => {
-    // Check if email exists in our users list
-    const user = allUsers.find(user => user.email === email);
-    
-    if (!user) {
-      toast({
-        title: "User not found",
-        description: "Please check your email address and try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    // For demo purposes, we'll accept any password or no password
-    // In a real app, we would check the password against Firebase Auth
-    if (password && password.length < 6) {
-      toast({
-        title: "Invalid password",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    return true;
-  };
 
   // Mock function to send OTP - in a real app, this would call Firebase function
   const sendOTP = async (email: string, password?: string): Promise<boolean> => {
@@ -114,14 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // In a real app, this would call a Firebase Function to send the OTP
       console.log(`OTP sent to ${email}`);
       
-      // Mock saving OTP to "Firebase"
-      localStorage.setItem('posguard_pending_otp', JSON.stringify({
-        email,
-        code: '123456', // In a real app, this would be generated on the server
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 5 * 60000).toISOString(), // 5 minutes from now
-        verified: false
-      }));
+      // Generate and save OTP
+      generateAndSaveOTP(email);
       
       toast({
         title: "OTP Sent",
@@ -156,8 +111,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isProductionUser = productionUsers.some(user => user.email === email);
     
     // Get stored OTP data
-    const storedOTP = localStorage.getItem('posguard_pending_otp');
-    if (!storedOTP && !enableFallbackMode) {
+    const otpData = getStoredOTP();
+    if (!otpData && !enableFallbackMode) {
       toast({
         title: "Verification failed",
         description: "No pending verification found. Please request a new OTP.",
@@ -170,9 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let userToLogin: User | undefined;
     
     // Try normal OTP verification
-    if (storedOTP) {
-      const otpData = JSON.parse(storedOTP);
-      
+    if (otpData) {
       // Check if OTP is for the correct email
       if (otpData.email !== email) {
         toast({
@@ -271,21 +224,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  // Mock function to log user activity - in a real app, this would save to Firebase
-  const logUserActivity = (email: string, action: string, details: string) => {
-    const activities = JSON.parse(localStorage.getItem('posguard_activities') || '[]');
-    
-    activities.push({
-      timestamp: new Date().toISOString(),
-      email,
-      action,
-      details
-    });
-    
-    localStorage.setItem('posguard_activities', JSON.stringify(activities));
-    console.log(`Activity logged: ${action} - ${details}`);
-  };
-
   // Logout function
   const logout = () => {
     if (currentUser) {
@@ -324,3 +262,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Re-export types for convenience
+export { UserRole, type User };
