@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -102,12 +103,6 @@ const Login = () => {
               <Button variant="link" className="p-0 h-auto text-posguard-primary text-sm">
                 Create an account
               </Button>
-            </div>
-            
-            <div className="text-xs text-center mt-4 text-gray-500">
-              For demo: admin@posguard.com, cashier@posguard.com, kitchen@posguard.com<br/>
-              Password: password123<br/>
-              OTP: 123456
             </div>
           </CardFooter>
         </Card>
