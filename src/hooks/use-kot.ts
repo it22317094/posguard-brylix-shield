@@ -58,7 +58,11 @@ const getStoredKOTs = (): KOT[] => {
   const storedKOTs = localStorage.getItem('posguard_kots');
   if (storedKOTs) {
     try {
-      return JSON.parse(storedKOTs);
+      const parsed = JSON.parse(storedKOTs);
+      return parsed.map((kot: any) => ({
+        ...kot,
+        status: kot.status as "pending" | "preparing" | "ready" | "completed"
+      }));
     } catch (error) {
       console.error('Failed to parse KOTs from localStorage', error);
       return mockKOTs;
@@ -102,14 +106,14 @@ export const useKOT = () => {
   }, [toast]);
 
   // Function to handle KOT status changes
-  const handleStatusChange = (kotId: string, newStatus: string) => {
+  const handleStatusChange = (kotId: string, newStatus: "pending" | "preparing" | "ready" | "completed") => {
     setIsLoading(true);
     
     // In a real app, this would be an API call
     setTimeout(() => {
       const updatedKots = kots.map(kot => 
         kot.id === kotId 
-          ? { ...kot, status: newStatus as "pending" | "preparing" | "ready" | "completed" } 
+          ? { ...kot, status: newStatus } 
           : kot
       );
       
@@ -133,7 +137,7 @@ export const useKOT = () => {
     setTimeout(() => {
       const updatedKots = kots.map(kot => 
         kot.id === kotId 
-          ? { ...kot, status: "pending" } 
+          ? { ...kot, status: "pending" as const } 
           : kot
       );
       
