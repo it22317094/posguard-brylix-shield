@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Item {
   id: number;
@@ -24,6 +25,7 @@ const QuickKOTCreator: React.FC<QuickKOTCreatorProps> = ({ items }) => {
   const [tableNumber, setTableNumber] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [currentItem, setCurrentItem] = useState("");
+  const navigate = useNavigate();
 
   const handleAddItem = () => {
     if (currentItem) {
@@ -46,15 +48,45 @@ const QuickKOTCreator: React.FC<QuickKOTCreatorProps> = ({ items }) => {
       return;
     }
 
-    // In a real app, this would call an API to create a KOT
-    toast({
-      title: "KOT Created",
-      description: `KOT for ${tableNumber} has been sent to kitchen`
-    });
-    
-    setQuickKOTOpen(false);
-    setTableNumber("");
-    setSelectedItems([]);
+    // Create new KOT object
+    const newKOT = {
+      id: `kot${Date.now()}`, // Generate a unique ID
+      tableNumber,
+      items: selectedItems.map((name, index) => ({
+        id: `item${Date.now()}-${index}`,
+        name,
+        quantity: 1,
+      })),
+      status: "pending",
+      timestamp: new Date().toISOString()
+    };
+
+    // Add to localStorage
+    try {
+      const storedKOTs = localStorage.getItem('posguard_kots');
+      const kots = storedKOTs ? JSON.parse(storedKOTs) : [];
+      kots.unshift(newKOT); // Add to beginning of array
+      localStorage.setItem('posguard_kots', JSON.stringify(kots));
+      
+      toast({
+        title: "KOT Created",
+        description: `KOT for Table ${tableNumber} has been sent to kitchen`
+      });
+      
+      setQuickKOTOpen(false);
+      setTableNumber("");
+      setSelectedItems([]);
+      
+      // Optionally navigate to KOT Manager
+      navigate('/kot-manager');
+    } catch (error) {
+      console.error('Failed to save KOT', error);
+      toast({
+        title: "Error",
+        description: "Failed to create KOT. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

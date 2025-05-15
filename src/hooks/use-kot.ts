@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface KOTItem {
@@ -53,14 +53,53 @@ const mockKOTs: KOT[] = [
   }
 ];
 
+// Use localStorage to persist KOTs between sessions and simulate real database
+const getStoredKOTs = (): KOT[] => {
+  const storedKOTs = localStorage.getItem('posguard_kots');
+  if (storedKOTs) {
+    try {
+      return JSON.parse(storedKOTs);
+    } catch (error) {
+      console.error('Failed to parse KOTs from localStorage', error);
+      return mockKOTs;
+    }
+  }
+  // Initialize with mock data on first load
+  localStorage.setItem('posguard_kots', JSON.stringify(mockKOTs));
+  return mockKOTs;
+};
+
 export const useKOT = () => {
-  const [kots, setKots] = useState<KOT[]>(mockKOTs);
-  const [filteredKots, setFilteredKots] = useState<KOT[]>(mockKOTs);
+  const [kots, setKots] = useState<KOT[]>(getStoredKOTs());
+  const [filteredKots, setFilteredKots] = useState<KOT[]>(kots);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
   
   const { toast } = useToast();
+
+  // Save KOTs to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('posguard_kots', JSON.stringify(kots));
+  }, [kots]);
+
+  // Function to refresh KOTs (simulating a fetch from server)
+  const refreshKOTs = useCallback(() => {
+    setIsLoading(true);
+    
+    // Simulate network request delay
+    setTimeout(() => {
+      const storedKOTs = getStoredKOTs();
+      setKots(storedKOTs);
+      setIsLoading(false);
+      
+      // Show toast notification
+      toast({
+        title: "KOTs Updated",
+        description: "Kitchen order tickets have been refreshed",
+      });
+    }, 600);
+  }, [toast]);
 
   // Function to handle KOT status changes
   const handleStatusChange = (kotId: string, newStatus: string) => {
@@ -68,13 +107,13 @@ export const useKOT = () => {
     
     // In a real app, this would be an API call
     setTimeout(() => {
-      setKots(prevKots => 
-        prevKots.map(kot => 
-          kot.id === kotId 
-            ? { ...kot, status: newStatus as "pending" | "preparing" | "ready" | "completed" } 
-            : kot
-        )
+      const updatedKots = kots.map(kot => 
+        kot.id === kotId 
+          ? { ...kot, status: newStatus as "pending" | "preparing" | "ready" | "completed" } 
+          : kot
       );
+      
+      setKots(updatedKots);
       
       // Show toast notification
       toast({
@@ -92,13 +131,13 @@ export const useKOT = () => {
     
     // In a real app, this would be an API call
     setTimeout(() => {
-      setKots(prevKots => 
-        prevKots.map(kot => 
-          kot.id === kotId 
-            ? { ...kot, status: "pending" } 
-            : kot
-        )
+      const updatedKots = kots.map(kot => 
+        kot.id === kotId 
+          ? { ...kot, status: "pending" } 
+          : kot
       );
+      
+      setKots(updatedKots);
       
       // Show toast notification
       toast({
@@ -136,6 +175,7 @@ export const useKOT = () => {
     statusFilter,
     setStatusFilter,
     handleStatusChange,
-    handleReopenKOT
+    handleReopenKOT,
+    refreshKOTs
   };
 };
