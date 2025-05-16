@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, AuthContextType } from '@/types/auth';
 import { AuthContext } from './auth-context';
 import { 
   getStoredUser, 
-  sendOTP as sendOTPService,
-  verifyOTP as verifyOTPService,
-  logout as logoutService
-} from '@/services/auth-service';
+  sendOTP,
+  verifyOTP,
+  logout
+} from '@/services/auth';
 import { toast } from "@/hooks/use-toast";
 
 // Inactivity timeout in milliseconds (1 minute)
@@ -86,12 +85,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Send OTP function
   const sendOTP = async (email: string, password?: string): Promise<boolean> => {
-    return sendOTPService(email, password);
+    return sendOTP(email, password);
   };
 
   // Verify OTP function
   const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
-    const user = await verifyOTPService(email, otp);
+    const user = await verifyOTP(email, otp);
     if (user) {
       setCurrentUser(user);
       resetInactivityTimer(); // Start inactivity timer on login
@@ -102,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Logout function
   const logout = () => {
-    logoutService(currentUser);
+    logout(currentUser);
     setCurrentUser(null);
     
     // Clear inactivity timer on logout
