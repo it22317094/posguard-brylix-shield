@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, AuthContextType } from '@/types/auth';
 import { AuthContext } from './auth-context';
 import { 
   getStoredUser, 
-  sendOTP,
-  verifyOTP,
-  logout
+  sendOTP as sendOTPService,
+  verifyOTP as verifyOTPService,
+  logout as logoutService
 } from '@/services/auth';
 import { toast } from "@/hooks/use-toast";
 
@@ -41,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const timerId = window.setTimeout(() => {
         // Only logout if the user is still logged in and has been inactive
         if (currentUser && Date.now() - lastActivity >= INACTIVITY_TIMEOUT) {
-          logout();
+          handleLogout();
           toast({
             title: "Auto-Logout",
             description: "You have been logged out due to inactivity",
@@ -84,13 +85,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [currentUser, resetInactivityTimer]);
 
   // Send OTP function
-  const sendOTP = async (email: string, password?: string): Promise<boolean> => {
-    return sendOTP(email, password);
+  const handleSendOTP = async (email: string, password?: string): Promise<boolean> => {
+    return sendOTPService(email, password);
   };
 
   // Verify OTP function
-  const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
-    const user = await verifyOTP(email, otp);
+  const handleVerifyOTP = async (email: string, otp: string): Promise<boolean> => {
+    const user = await verifyOTPService(email, otp);
     if (user) {
       setCurrentUser(user);
       resetInactivityTimer(); // Start inactivity timer on login
@@ -100,8 +101,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Logout function
-  const logout = () => {
-    logout(currentUser);
+  const handleLogout = () => {
+    if (currentUser) {
+      logoutService(currentUser);
+    }
     setCurrentUser(null);
     
     // Clear inactivity timer on logout
@@ -115,9 +118,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value: AuthContextType = {
     currentUser,
     isLoading,
-    sendOTP,
-    verifyOTP,
-    logout,
+    sendOTP: handleSendOTP,
+    verifyOTP: handleVerifyOTP,
+    logout: handleLogout,
     isAuthenticated: !!currentUser,
   };
 
