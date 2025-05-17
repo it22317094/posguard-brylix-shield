@@ -52,9 +52,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setInactivityTimer(Number(timerId));
     }
-  }, [currentUser, lastActivity, inactivityTimer]);
+  }, [currentUser, inactivityTimer]);
 
-  // Set up activity listeners
+  // Set up activity listeners - FIX: Added proper dependencies to prevent infinite loop
   useEffect(() => {
     if (currentUser) {
       // Define the events to track for activity
@@ -94,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const user = await verifyOTPService(email, otp);
     if (user) {
       setCurrentUser(user);
-      resetInactivityTimer(); // Start inactivity timer on login
       return true;
     }
     return false;

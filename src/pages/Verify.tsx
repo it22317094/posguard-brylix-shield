@@ -49,11 +49,15 @@ const Verify = () => {
     try {
       const success = await verifyOTP(email, otp);
       if (success) {
-        navigate("/dashboard");
+        // Add a small delay before navigation to allow state updates to complete
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 100);
+      } else {
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
-    } finally {
       setIsSubmitting(false);
     }
   };
