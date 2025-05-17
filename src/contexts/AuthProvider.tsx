@@ -1,13 +1,9 @@
-
 import React, { useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, AuthContextType } from '@/types/auth';
 import { AuthContext } from './auth-context';
-import { 
-  getStoredUser, 
-  sendOTP as sendOTPService,
-  verifyOTP as verifyOTPService,
-  logout as logoutService
-} from '@/services/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/config/firebase';
+import { getUserProfile, signOutUser } from '@/services/auth/firebase-service';
 import { toast } from "@/hooks/use-toast";
 
 // Inactivity timeout in milliseconds (1 minute)
@@ -19,13 +15,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
   const [inactivityTimer, setInactivityTimer] = useState<number | null>(null);
 
-  // Check if user is saved in localStorage on mount
+  // Listen to Firebase auth state changes
   useEffect(() => {
-    const savedUser = getStoredUser();
-    if (savedUser) {
-      setCurrentUser(savedUser);
-    }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userProfile = await getUserProfile(user.uid);
+        setCurrentUser(userProfile);
+      } else {
+        setCurrentUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
   }, []);
 
   // Reset inactivity timer when there's user activity
@@ -84,43 +87,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser, resetInactivityTimer]);
 
-  // Send OTP function
-  const handleSendOTP = async (email: string, password?: string): Promise<boolean> => {
-    return sendOTPService(email, password);
-  };
-
-  // Verify OTP function
-  const handleVerifyOTP = async (email: string, otp: string): Promise<boolean> => {
-    const user = await verifyOTPService(email, otp);
-    if (user) {
-      setCurrentUser(user);
-      return true;
+  // Firebase login methods
+  const handleLogin = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const result = await import('@/services/auth/firebase-service').then(module => 
+        module.signInWithEmail(email, password)
+      );
+      setIsLoading(false);
+      return !!result;
+    } catch (error) {
+      console.error("Login error:", error);
+      setIsLoading(false);
+      return false;
     }
-    return false;
   };
 
   // Logout function
   const handleLogout = () => {
-    if (currentUser) {
-      logoutService(currentUser);
-    }
-    setCurrentUser(null);
-    
-    // Clear inactivity timer on logout
-    if (inactivityTimer) {
-      window.clearTimeout(inactivityTimer);
-      setInactivityTimer(null);
-    }
+    signOutUser().then(() => {
+      setCurrentUser(null);
+      
+      // Clear inactivity timer on logout
+      if (inactivityTimer) {
+        window.clearTimeout(inactivityTimer);
+        setInactivityTimer(null);
+      }
+    });
   };
 
-  // Auth context value
+  // Auth context value with Firebase methods
   const value: AuthContextType = {
     currentUser,
     isLoading,
-    sendOTP: handleSendOTP,
-    verifyOTP: handleVerifyOTP,
+    login: handleLogin,
     logout: handleLogout,
     isAuthenticated: !!currentUser,
+    // Keep these for backward compatibility but implement them with Firebase
+    sendOTP: async (email: string) => {
+      // For backward compatibility, we'll use this to trigger password reset
+      const result = await import('@/services/auth/firebase-service').then(module => 
+        module.sendPasswordReset(email)
+      );
+      return result;
+    },
+    verifyOTP: async (email: string, otp: string) => {
+      // This is a placeholder - in Firebase we would use signInWithEmailAndPassword instead
+      console.warn("verifyOTP is deprecated with Firebase implementation");
+      return false;
+    }
   };
 
   return (

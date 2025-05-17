@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Pages
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Verify from "./pages/Verify";
 import Dashboard from "./pages/Dashboard";
 import KOTManager from "./pages/KOTManager";
@@ -30,6 +31,7 @@ const App = () => (
           <Routes>
             {/* Authentication Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             

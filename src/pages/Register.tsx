@@ -1,70 +1,64 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Lock, Mail } from "lucide-react";
+import { Shield, User, Mail, Lock } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { registerUser } from "@/services/auth/firebase-service";
 import { toast } from "@/hooks/use-toast";
 
-const Login = () => {
+const Register = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const success = await login(email, password);
-      if (success) {
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Please check your credentials and try again",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error logging in:", error);
+    
+    // Validate form
+    if (password !== passwordConfirm) {
       toast({
-        title: "Login error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Passwords don't match",
+        description: "Please make sure both passwords match",
         variant: "destructive"
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
+    
+    if (password.length < 6) {
       toast({
-        title: "Email required",
-        description: "Please enter your email address first",
+        title: "Password too short",
+        description: "Password must be at least 6 characters long",
         variant: "destructive"
       });
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const resetResult = await import('@/services/auth/firebase-service').then(module => 
-        module.sendPasswordReset(email)
-      );
-      if (resetResult) {
+      const result = await registerUser(email, password, name);
+      if (result) {
         toast({
-          title: "Password reset email sent",
-          description: "Please check your inbox for instructions"
+          title: "Registration successful",
+          description: "Please check your email to verify your account",
         });
+        navigate("/login");
       }
-    } catch (error) {
-      console.error("Error sending reset email:", error);
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,13 +75,29 @@ const Login = () => {
 
         <Card className="animate-fade-in animation-delay-100 shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardTitle className="text-2xl">Create an Account</CardTitle>
             <CardDescription>
-              Please enter your credentials to sign in
+              Enter your information to create a new account
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -105,26 +115,31 @@ const Login = () => {
               </div>
               
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Button 
-                    variant="link" 
-                    size="sm" 
-                    className="text-xs p-0 h-auto text-posguard-primary"
-                    onClick={handleForgotPassword}
-                    type="button"
-                  >
-                    Forgot password?
-                  </Button>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="passwordConfirm">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="passwordConfirm"
+                    type="password"
+                    placeholder="Confirm your password"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
                     required
                     className="pl-10"
                   />
@@ -135,20 +150,20 @@ const Login = () => {
           <CardFooter className="flex flex-col space-y-3">
             <Button 
               onClick={handleSubmit} 
-              disabled={!email || !password || isSubmitting} 
+              disabled={!name || !email || !password || !passwordConfirm || isSubmitting} 
               className="w-full bg-posguard-primary hover:bg-posguard-secondary"
             >
-              {isSubmitting ? "Signing in..." : "Sign in"}
+              {isSubmitting ? "Creating account..." : "Create account"}
             </Button>
             
             <div className="text-center">
-              <span className="text-sm text-gray-500">Don't have an account? </span>
+              <span className="text-sm text-gray-500">Already have an account? </span>
               <Button 
                 variant="link" 
                 className="p-0 h-auto text-posguard-primary text-sm"
-                onClick={() => navigate("/register")}
+                onClick={() => navigate("/login")}
               >
-                Create an account
+                Sign in
               </Button>
             </div>
           </CardFooter>
@@ -158,4 +173,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

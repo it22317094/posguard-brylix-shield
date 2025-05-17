@@ -1,4 +1,3 @@
-
 // Define user roles
 export type UserRole = 'admin' | 'cashier' | 'kitchen';
 
@@ -13,10 +12,12 @@ export interface User {
 export interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
-  sendOTP: (email: string, password?: string) => Promise<boolean>;
-  verifyOTP: (email: string, otp: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  // Keep these for backward compatibility
+  sendOTP: (email: string, password?: string) => Promise<boolean>;
+  verifyOTP: (email: string, otp: string) => Promise<boolean>;
 }
 
 // OTP data structure
