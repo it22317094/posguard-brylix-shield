@@ -1,28 +1,28 @@
 import { OTPData } from "@/types/auth";
 import { toast } from "@/hooks/use-toast";
-import { logUserActivity, generateAndSaveOTP, getStoredOTP } from '@/utils/auth-utils';
+import { 
+  logUserActivity, 
+  generateAndSaveOTP, 
+  getStoredOTP, 
+  verifyCredentials,
+  productionUsers,
+  enableFallbackMode,
+  fallbackUsers,
+  allUsers,
+  fallbackMapping
+} from '@/utils/auth-utils';
+import { saveUserToStorage } from './local-storage';
 
 /**
  * Send OTP to user email
  */
 export const sendOTP = async (email: string, password?: string): Promise<boolean> => {
-  // Imported from auth-utils, moving the function call to maintain the same behavior
-  // while keeping the code organized
-  const verifyCredentials = (email: string, password?: string): boolean => {
-    // This function is imported from auth-utils.ts
-    // Keeping the import reference to maintain the same behavior
-    const { verifyCredentials } = require('@/utils/auth-utils');
-    return verifyCredentials(email, password);
-  };
-  
   // Verify credentials
   if (!verifyCredentials(email, password)) {
     return false;
   }
 
   // Check if this is a production user email
-  // Importing directly to maintain the same behavior
-  const { productionUsers, enableFallbackMode } = require('@/utils/auth-utils');
   const isProductionUser = productionUsers.some((user) => user.email === email);
   
   try {
@@ -63,9 +63,6 @@ export const sendOTP = async (email: string, password?: string): Promise<boolean
  * Verify OTP entered by user
  */
 export const verifyOTP = async (email: string, otp: string): Promise<import('@/types/auth').User | null> => {
-  // Import required utilities and constants
-  const { productionUsers, fallbackUsers, allUsers, fallbackMapping, enableFallbackMode } = require('@/utils/auth-utils');
-
   // Check if this is a production user email and fallback is enabled
   const isProductionUser = productionUsers.some(user => user.email === email);
   
@@ -161,9 +158,6 @@ export const verifyOTP = async (email: string, otp: string): Promise<import('@/t
   
   // Process successful login
   if (loginSuccessful && userToLogin) {
-    // Import and use local storage service
-    const { saveUserToStorage } = require('./local-storage');
-    
     // Log successful login
     logUserActivity(userToLogin.email, 'login', `${userToLogin.name} logged in`);
     
