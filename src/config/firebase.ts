@@ -5,14 +5,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
-// Replace with your actual Firebase project config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyA9S9fP2wHX8UTuwRR26Y9Sls0DbMyaqoc",
+  authDomain: "isp-chatbot.firebaseapp.com",
+  databaseURL: "https://isp-chatbot-default-rtdb.firebaseio.com",
+  projectId: "isp-chatbot",
+  storageBucket: "isp-chatbot.firebasestorage.app",
+  messagingSenderId: "16927512964",
+  appId: "1:16927512964:web:62f88bb6866df195d8e5d1",
+  measurementId: "G-LEGP394Z8P"
 };
 
 // Initialize Firebase
