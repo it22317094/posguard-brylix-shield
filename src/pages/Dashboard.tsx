@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, ListTodo, Activity } from "lucide-react";
@@ -17,11 +18,14 @@ const Dashboard = () => {
 
   // Check if user is cashier or admin
   const showAlerts = currentUser?.role === "admin" || currentUser?.role === "cashier";
+  
+  // Display name - show "John" if cashier, otherwise show the actual name
+  const displayName = currentUser?.role === "cashier" ? "John" : currentUser?.name;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Welcome, {currentUser?.name}</h1>
+        <h1 className="text-2xl font-bold">Welcome, {displayName}</h1>
         <p className="text-muted-foreground">Here's what's happening with Brylix POS today.</p>
       </div>
 
@@ -65,7 +69,7 @@ const Dashboard = () => {
           <AlertCard alerts={alerts} />
         )}
 
-        {/* Activity Log */}
+        {/* Activity Log - Only show for admin */}
         {currentUser?.role === "admin" && (
           <ActivityCard activities={activities} />
         )}
